@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ 'Тіркелу' if mode == 'register' else 'Кіру' }} · ЖИ субтитр студиясы</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="logo big" aria-hidden="true">ЖИ</div>
+    <h1>{{ 'Аккаунт ашу' if mode == 'register' else 'Қош келдіңіз' }}</h1>
+    <p class="lead">
+      {% if mode == 'register' %}Тіркеліңіз: субтитрлеріңіз пен баптауларыңыз өзіңізде сақталады.
+      {% else %}Аккаунтыңызға кіріңіз.{% endif %}
+    </p>
+
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+    <form method="post" class="form-grid">
+      <label class="field">
+        <span>Пайдаланушы аты</span>
+        <input name="username" required minlength="3" maxlength="32" autocomplete="username" value="{{ username }}">
+      </label>
+      <label class="field">
+        <span>Құпия сөз</span>
+        <input type="password" name="password" required minlength="6" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}">
+      </label>
+      <button class="btn big" type="submit">{{ 'Тіркелу' if mode == 'register' else 'Кіру' }}</button>
+    </form>
+
+    <p class="muted center">
+      {% if mode == 'register' %}Аккаунтыңыз бар ма? <a href="{{ url_for('login') }}">Кіру</a>
+      {% else %}Аккаунтыңыз жоқ па? <a href="{{ url_for('register') }}">Тіркелу</a>{% endif %}
+    </p>
+  </main>
+</body>
+</html>

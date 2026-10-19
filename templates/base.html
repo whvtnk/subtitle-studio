@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="kk" style="--accent: {{ theme.accent }}; --on-accent: {{ theme.on_accent }}; --bg: {{ theme.bg }}; --surface: {{ theme.surface }}; --sidebar: {{ theme.sidebar }}; --text: {{ theme.text }}; --radius: {{ theme.radius }}px; font-size: {{ (theme.font / 16 * 100)|round(1) }}%;">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block pagetitle %}ЖИ субтитр студиясы{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>window.THEME = {{ theme|tojson }};</script>
+</head>
+<body class="{{ 'contrast' if theme.contrast }} {{ '' if theme.motion else 'noanim' }}">
+  <a class="skip" href="#main">Негізгі мазмұнға өту</a>
+
+  <div class="shell" id="shell">
+
+    <aside class="sidebar" id="sidebar" aria-label="Бүйірлік мәзір">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="logo" aria-hidden="true">ЖИ</span>
+        <span class="brand-text">Субтитр студиясы</span>
+      </a>
+
+      <a class="btn sb-new" href="{{ url_for('index') }}">+ Жаңа видео</a>
+
+      <div role="search">
+        <label class="sb-search">
+          <span class="sr-only">Жұмыстарды іздеу</span>
+          <input id="sb-search" type="search" placeholder="Іздеу…" autocomplete="off">
+        </label>
+      </div>
+
+      <nav class="sb-section" aria-labelledby="sb-h">
+        <p class="sb-h" id="sb-h">Жұмыстарым</p>
+        <ul id="sb-list" class="sb-list"></ul>
+        <p id="sb-empty" class="muted sb-empty">Әлі жұмыс жоқ</p>
+      </nav>
+
+      <div class="sb-foot">
+        <span class="avatar" aria-hidden="true">{{ me.username[:1]|upper }}</span>
+        <span class="who">
+          <strong>{{ me.username }}</strong>
+          <a href="{{ url_for('logout') }}">Шығу</a>
+        </span>
+        <button type="button" class="icon-btn sm" id="open-settings" aria-label="Дизайн баптаулары" title="Дизайн">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <div class="content">
+      <header class="topbar">
+        <button type="button" class="icon-btn" id="sb-toggle" aria-expanded="true" aria-controls="sidebar" aria-label="Бүйірлік мәзірді жию немесе ашу">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        </button>
+        <nav class="crumbs" aria-label="Жол көрсеткіш">{% block crumbs %}{% endblock %}</nav>
+        <button type="button" class="btn ghost" id="chat-toggle" aria-expanded="true" aria-controls="chat">ЖИ көмекшісі</button>
+      </header>
+      <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+    </div>
+
+    <aside class="chat" id="chat" aria-label="ЖИ көмекшісі">
+      <div class="chat-head">
+        <h2 class="chat-title">ЖИ көмекшісі</h2>
+        <div class="chat-tools">
+          <button type="button" class="btn ghost sm" id="chat-clear">Тазалау</button>
+          <button type="button" class="icon-btn sm" id="chat-close" aria-label="Чатты жабу">✕</button>
+        </div>
+      </div>
+      <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-label="Хабарламалар" tabindex="0"></div>
+      <form class="chat-form" id="chat-form">
+        <div class="chat-file" id="chat-file-row" hidden>
+          <span id="chat-file-name"></span>
+          <button type="button" class="btn ghost sm" id="chat-file-clear">Бас тарту</button>
+        </div>
+        <div class="chat-input-row">
+          <button type="button" class="icon-btn sm attach" id="chat-attach" aria-label="Сурет қосу" title="Сурет қосу және сипаттату">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="9" cy="10" r="2" fill="currentColor"/><path d="M4 18l5-5 4 4 3-3 4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+            </button>
+          <input type="file" id="chat-image" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          <label class="sr-only" for="chat-input">Хабарлама</label>
+          <textarea id="chat-input" rows="2" maxlength="2000" placeholder="Сұрағыңызды жазыңыз немесе сурет қосыңыз…"></textarea>
+          <button class="btn" id="chat-send" type="submit">Жіберу</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <dialog id="settings" class="settings" aria-labelledby="settings-h">
+    <div class="settings-form">
+      <div class="settings-head">
+        <h2 id="settings-h">Дизайн</h2>
+        <button type="button" class="icon-btn sm" id="settings-close" aria-label="Жабу">✕</button>
+      </div>
+
+      <p class="muted small">Түстер мен пішінді өзіңіз өзгертіңіз. Сақтасаңыз, баптау осы аккаунтқа байланады.</p>
+
+      <div class="presets" role="group" aria-label="Дайын тақырыптар">
+        <button type="button" class="chip" data-preset="light">Ашық</button>
+        <button type="button" class="chip" data-preset="dark">Қараңғы</button>
+        <button type="button" class="chip" data-preset="warm">Жылы</button>
+        <button type="button" class="chip" data-preset="green">Жасыл</button>
+      </div>
+
+      <fieldset class="group">
+        <legend>Түстер</legend>
+        <label class="color-row">Акцент <input type="color" data-key="accent"></label>
+        <label class="color-row">Фон <input type="color" data-key="bg"></label>
+        <label class="color-row">Карточка <input type="color" data-key="surface"></label>
+        <label class="color-row">Бүйірлік панель <input type="color" data-key="sidebar"></label>
+        <label class="color-row">Мәтін <input type="color" data-key="text"></label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Пішін және оқу</legend>
+        <label class="range-row">Бұрыштық радиус <span><input type="range" min="0" max="28" data-key="radius"><output></output></span></label>
+        <label class="range-row">Қаріп өлшемі <span><input type="range" min="14" max="28" data-key="font"><output></output></span></label>
+        <label class="check"><input type="checkbox" data-key="contrast"> Жоғары контраст</label>
+        <label class="check"><input type="checkbox" data-key="motion"> Анимация қосулы</label>
+      </fieldset>
+
+      <div class="settings-actions">
+        <button type="button" class="btn ghost" id="theme-reset">Әдепкіге қайтару</button>
+        <button type="button" class="btn" id="theme-save">Сақтау</button>
+      </div>
+      <p id="theme-warn" class="error small" role="status"></p>
+      <p id="theme-msg" class="status" role="status"></p>
+    </div>
+  </dialog>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='chat.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

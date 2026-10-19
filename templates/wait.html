@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block pagetitle %}Өңделуде · ЖИ субтитр студиясы{% endblock %}
+{% block crumbs %}
+<a href="{{ url_for('index') }}">Басты</a><span class="sep" aria-hidden="true">›</span><span aria-current="page">Өңдеу</span>
+{% endblock %}
+{% block content %}
+<h1>ЖИ өңдеп жатыр</h1>
+<p class="lead" id="msg" role="status">«{{ title }}» өңделуде. Бұл бірнеше минут алуы мүмкін. Бетті жаппаңыз, нәтиже дайын болғанда плеер өзі ашылады.</p>
+<div class="card progress-card">
+  <div class="spinner" aria-hidden="true"></div>
+  <p class="status" id="timer">0 сек өтті</p>
+</div>
+<script>
+  const started = Date.now();
+  const tick = setInterval(function () {
+    document.getElementById("timer").textContent = Math.round((Date.now() - started) / 1000) + " сек өтті";
+  }, 1000);
+  let fails = 0;
+  function fail(text) {
+    clearInterval(check);
+    clearInterval(tick);
+    const sp = document.querySelector(".spinner");
+    if (sp) sp.remove();
+    document.getElementById("msg").textContent = text;
+  }
+  const check = setInterval(async function () {
+    try {
+      const r = await fetch("{{ url_for('status', job=job) }}");
+      const s = await r.json();
+      fails = 0;
+      if (s.state === "done") {
+        clearInterval(check);
+        clearInterval(tick);
+        location.href = "{{ url_for('player', job=job, ext=ext) }}";
+      } else if (s.state === "error") {
+        fail("Қате шықты: " + s.error);
+      } else if (s.state === "unknown") {
+        fail("Өңдеу тоқтап қалған (сервер қайта қосылған болуы мүмкін). Видеоны қайта жүктеңіз.");
+      }
+    } catch (e) {
+      fails += 1;
+      if (fails >= 5) fail("Серверге қосылу мүмкін болмады. Интернетті тексеріп, бетті жаңартыңыз.");
+    }
+  }, 2000);
+</script>
+{% endblock %}

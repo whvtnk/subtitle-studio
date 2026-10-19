@@ -1,0 +1,9 @@
+.env
+.env.example.*
+uploads/
+__pycache__/
+backup_*/
+backup_*.py
+*.webp
+*.avif
+demo.webm

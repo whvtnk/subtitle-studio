@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ title }} · ЖИ субтитр{% endblock %}
+{% block crumbs %}
+<a href="{{ url_for('index') }}">Басты</a><span class="sep" aria-hidden="true">›</span><span class="crumb-title" aria-current="page">{{ title }}</span>
+{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="player-wrap">
+  <video id="player" controls aria-label="{{ title }}" data-lang="{{ lang }}" preload="metadata" src="{{ url_for('media', name=video) }}">
+    <track id="subs" kind="captions" srclang="{{ lang }}" label="Субтитр" src="{{ url_for('media', name=vtt) }}" default>
+  </video>
+</div>
+<div id="current-sub" class="current-sub" lang="{{ lang }}" aria-hidden="true">Субтитр осында шығады</div>
+
+<fieldset class="mode">
+  <legend>Дыбыс режимі</legend>
+  <label><input type="radio" name="sound" value="original" checked> Оригинал дыбыс (видеоның өз дыбысы)</label>
+  <label><input type="radio" name="sound" value="tts"> Субтитрді дауыспен оқу (ағымдағы орыннан)</label>
+</fieldset>
+
+<div class="row">
+  <a class="btn big secondary" href="{{ url_for('media', name=vtt) }}" download>Субтитрді жүктеу (.vtt)</a>
+  <a class="btn big secondary" href="{{ url_for('index') }}">Жаңа видео</a>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='player.js') }}"></script>{% endblock %}

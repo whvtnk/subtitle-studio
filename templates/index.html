@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block pagetitle %}Басты · ЖИ субтитр студиясы{% endblock %}
+{% block crumbs %}<span class="crumb current" aria-current="page">Басты</span>{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Бейнеге субтитр жасаңыз</h1>
+  <p class="lead">Видеоны жүктеңіз. ЖИ дыбысты тыңдап, субтитрлерді бейненің астына шығарады. Барлығы осы компьютерде, ақысыз.</p>
+</section>
+
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" id="upload-form" class="card upload">
+  <label class="dropzone" id="dropzone">
+    <input type="file" name="video" accept="video/*" required id="video-input" class="sr-only">
+    <span class="dz-icon" aria-hidden="true">▶</span>
+    <span class="dz-title" id="dz-title">Видеоны осы жерге сүйреңіз немесе таңдаңыз</span>
+    <span class="dz-hint">mp4, webm, ogv, mov, mkv · 300 МБ-қа дейін</span>
+  </label>
+  <div class="row-fields">
+    <label class="field">
+      <span>Сөйлеу тілі</span>
+      <select name="lang">
+        <option value="kk" selected>Қазақша</option>
+        <option value="ru" lang="ru">Русский</option>
+        <option value="en" lang="en">English</option>
+        <option value="">Автоматты</option>
+      </select>
+    </label>
+    <button type="submit" class="btn big" id="submit-btn" disabled aria-describedby="dz-title">Субтитр жасау</button>
+  </div>
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+</form>
+
+<form id="describe-form" class="card describe" enctype="multipart/form-data">
+  <div>
+    <h2>Немесе суретті сипаттатыңыз</h2>
+    <p class="muted small">Суретті таңдаңыз, ЖИ оны қысқаша және түсінікті тілмен сипаттап береді.</p>
+  </div>
+  <label class="dropzone small-dz" id="img-dropzone">
+    <input type="file" name="image" id="img-input" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" required>
+    <span class="dz-title" id="img-title">Суретті таңдаңыз (JPG, PNG, WEBP, GIF · 4 МБ-қа дейін)</span>
+  </label>
+  <div class="row-fields">
+    <label class="field">
+      <span>Сұрақ (міндетті емес)</span>
+      <input type="text" name="question" maxlength="500" placeholder="Мысалы: суретте не бар?">
+    </label>
+    <button type="submit" class="btn" id="describe-btn" disabled>Сипаттау</button>
+  </div>
+  <div id="describe-result" class="describe-result" role="status" aria-live="polite"></div>
+</form>
+
+<section class="recent" aria-labelledby="recent-h">
+  <h2 id="recent-h">Соңғы жұмыстар</h2>
+  {% if recent %}
+  <ul class="cards">
+    {% for v in recent %}
+    <li>
+      <a class="vcard" href="{{ url_for('player', job=v.job, ext=v.ext) }}">
+        <span class="vcard-icon" aria-hidden="true">▶</span>
+        <span class="vcard-title">{{ v.title }}</span>
+        <span class="vcard-date">{{ v.label }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Әлі жұмыс жоқ. Алғашқы видеоңызды жүктеңіз.</p>
+  {% endif %}
+</section>
+{% endblock %}

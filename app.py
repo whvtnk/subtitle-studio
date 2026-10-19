@@ -45,6 +45,9 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_VISION_MODEL = os.environ.get("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")  # суретті сипаттау үшін
+# Лимит таусылса (429), келесі модельге көшеміз: әр модельдің лимиті бөлек
+CHAT_FALLBACKS = [m for m in os.environ.get("GROQ_FALLBACKS", "llama-3.1-8b-instant").split(",") if m]
+VISION_FALLBACKS = [m for m in os.environ.get("GROQ_VISION_FALLBACKS", "meta-llama/llama-4-scout-17b-16e-instruct").split(",") if m]
 IMG_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 IMG_MAX_BYTES = 4 * 1024 * 1024
 DESCRIBE_DEFAULT = "Бұл суретті есту қабілеті бұзылған бала үшін қысқа, нақты және түсінікті тілмен сипаттап бер."
@@ -345,7 +348,17 @@ class ChatError(Exception):
     pass
 
 
-def groq_chat(messages, model):
+def groq_chat(messages, model, fallbacks=()):
+    models = (model, *fallbacks)
+    for m in models:
+        try:
+            return _groq_once(messages, m)
+        except ChatError as e:
+            if getattr(e, "code", None) not in (429, 404, 400) or m == models[-1]:
+                raise
+
+
+def _groq_once(messages, model):
     if not GROQ_KEY:
         raise ChatError("ЖИ әзірге қосылмаған: сервер әкімшісі GROQ_API_KEY орнатуы керек.")
     body = json.dumps({
@@ -364,13 +377,16 @@ def groq_chat(messages, model):
             data = json.load(r)
         return data["choices"][0]["message"]["content"].strip()
     except urllib.error.HTTPError as e:
-        raise ChatError(f"ЖИ сервисі қате қайтарды ({e.code}). Кілтті, модельді немесе лимитті тексеріңіз.")
+        err = ChatError("ЖИ күндік лимиті таусылды. Біраз күтіңіз немесе жаңа кілт қойыңыз." if e.code == 429
+                        else f"ЖИ сервисі қате қайтарды ({e.code}). Кілтті, модельді немесе лимитті тексеріңіз.")
+        err.code = e.code
+        raise err
     except (urllib.error.URLError, TimeoutError, KeyError, ValueError):
         raise ChatError("ЖИ сервисіне қосылу мүмкін болмады.")
 
 
 def ask_groq(messages):
-    return groq_chat(messages, GROQ_MODEL)
+    return groq_chat(messages, GROQ_MODEL, CHAT_FALLBACKS)
 
 
 @app.route("/api/chat", methods=["GET", "POST", "DELETE"])
@@ -426,7 +442,7 @@ def api_describe():
     url = f"data:{f.mimetype};base64," + base64.b64encode(data).decode("ascii")
     content = [{"type": "text", "text": question}, {"type": "image_url", "image_url": {"url": url}}]
     try:
-        reply = groq_chat([{"role": "user", "content": content}], GROQ_VISION_MODEL)
+        reply = groq_chat([{"role": "user", "content": content}], GROQ_VISION_MODEL, VISION_FALLBACKS)
     except ChatError as e:
         return jsonify({"error": str(e)}), 503
     db().execute("INSERT INTO messages(user_id, role, content, created) VALUES(?,?,?,?)",
